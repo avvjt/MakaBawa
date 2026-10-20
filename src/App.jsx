@@ -68,6 +68,38 @@ function imageUrl(image, width = 900) {
   return `https://images.unsplash.com/${image}?auto=format&fit=crop&w=${width}&q=85`
 }
 
+function getDishImage(item) {
+  if (item.image) return item.image
+
+  const name = item.name.toLowerCase()
+  const category = item.category || ""
+
+  const photoGroups = [
+    [/fries|hash brown|potato/i, "photo-1573080496219-bb080dd4f877"],
+    [/pizza/i, "photo-1513104890138-7c749659a591"],
+    [/burger|sandwich|toast|bread|pattice|patties/i, "photo-1568901346375-23c9450c58cd"],
+    [/paneer|mutter|dal|jeera aloo|veg curry|dhansak|xacuti/i, "photo-1631452180519-c014fe946bc7"],
+    [/chicken|wings|tidbits/i, "photo-1603894584373-5ac82b2ae398"],
+    [/mutton|lamb|keema/i, "photo-1544025162-d76694265947"],
+    [/fish|prawn|calamari|seafood/i, "photo-1519708227418-c8fd9a32b7a2"],
+    [/rice|biryani|pulao/i, "photo-1512058564366-18510be2db19"],
+    [/pasta|spaghetti|macaroni/i, "photo-1473093295043-cdd812d0e601"],
+    [/cake|brownie|ice cream|dessert|gulab jamun|custard/i, "photo-1551024506-0ec5c6b7d0e7"],
+    [/coffee|tea|juice|shake|mojito|lemonade/i, "photo-1513558161293-cad8d4d4e1d4"],
+  ]
+
+  const match = photoGroups.find(([pattern]) => pattern.test(name))
+  const photo = match?.[1] || (
+    category === "beverages" ? "photo-1513558161293-cad8d4d4e1d4" :
+    category === "desserts" ? "photo-1551024506-0ec5c6b7d0e7" :
+    category.includes("fish") ? "photo-1519708227418-c8fd9a32b7a2" :
+    category.includes("chicken") || category.includes("nonveg") ? "photo-1603894584373-5ac82b2ae398" :
+    "photo-1547592180-85f173990554"
+  )
+
+  return "https://images.unsplash.com/" + photo + "?auto=format&fit=crop&w=850&q=85"
+}
+
 function formatPrice(price) {
   return price == null ? null : `₹${price}`
 }
@@ -111,7 +143,7 @@ function ItemDetailsButton({ item }) {
 }
 
 function MenuCard({ item, index, onAdd }) {
-  const image = imageUrl(item.image, 850)
+  const image = imageUrl(getDishImage(item), 850)
 
   return (
     <motion.article
@@ -128,6 +160,10 @@ function MenuCard({ item, index, onAdd }) {
             alt={item.name}
             className="card-image"
             loading={index > 2 ? 'lazy' : 'eager'}
+            onError={(event) => {
+              event.currentTarget.onerror = null
+              event.currentTarget.src = "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=850&q=80"
+            }}
           />
         ) : (
           <div className="card-image flex items-center justify-center">
@@ -198,7 +234,7 @@ function ItemModal({ item, onClose }) {
     }
   }, [item, onClose])
 
-  const image = item ? imageUrl(item.image, 1200) : null
+  const image = item ? imageUrl(getDishImage(item), 1200) : null
 
   return (
     <AnimatePresence>
@@ -286,6 +322,37 @@ export default function App() {
   const cartCount = cart.reduce((sum, entry) => sum + entry.quantity, 0)
   const cartTotal = cart.reduce((sum, entry) => sum + (typeof entry.item.price === 'number' ? entry.item.price : 0) * entry.quantity, 0)
   const hasVariablePrices = cart.some((entry) => typeof entry.item.price !== 'number')
+  const checkoutWhatsApp = () => {
+    const phone = "917890066480";
+    const items = cart.map(({ item, quantity }) => {
+      const price = typeof item.price === "number"
+        ? "₹" + item.price.toLocaleString("en-IN") + " each"
+        : "Price to be confirmed";
+      const subtotal = typeof item.price === "number"
+        ? "₹" + (item.price * quantity).toLocaleString("en-IN")
+        : "To be confirmed";
+      return "• " + item.name + " × " + quantity +
+        "\\n  " + price + " — Subtotal: " + subtotal;
+    });
+
+    const message = [
+      "NEW ORDER — MAKA BAWA",
+      "",
+      ...items,
+      "",
+      "Estimated subtotal: ₹" + cartTotal.toLocaleString("en-IN"),
+      ...(hasVariablePrices ? ["", "Some prices need confirmation."] : []),
+      "",
+      "Please confirm availability and the final bill."
+    ].join("\\n");
+
+    window.open(
+      "https://wa.me/" + phone + "?text=" + encodeURIComponent(message),
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
 
 
   useEffect(() => {
@@ -551,7 +618,7 @@ export default function App() {
             className="cart-panel"
             role="dialog"
             aria-modal="true"
-            aria-label="Your demo cart"
+            aria-label="Your shopping cart"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="cart-panel-heading">
@@ -572,7 +639,7 @@ export default function App() {
             ) : (
               <>
                 <div className="cart-demo-notice">
-                  DEMO ONLY — checkout does not submit a real order.
+                  Review your order before sending it to the restaurant on WhatsApp.
                 </div>
 
                 <div className="cart-items">
@@ -596,8 +663,8 @@ export default function App() {
                   <strong>₹{cartTotal.toLocaleString("en-IN")}</strong>
                 </div>
                 {hasVariablePrices && <p className="cart-price-warning">Some items have prices by size or need confirmation, so they are not included in this subtotal.</p>}
-                <button type="button" className="cart-checkout" disabled={cart.length === 0} onClick={() => setOrderSubmitted(true)}>Try demo checkout</button>
-                <p className="cart-disclaimer">No payment is taken. Nothing is sent to the kitchen.</p>
+                <button type="button" className="cart-checkout" disabled={cart.length === 0} onClick={checkoutWhatsApp}>Order via WhatsApp</button>
+                <p className="cart-disclaimer">WhatsApp opens with your order. Tap Send to submit it; no online payment is processed.</p>
               </>
             )}
           </section>
