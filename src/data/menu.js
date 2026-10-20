@@ -1,59 +1,246 @@
-// Temporary demo menu. Replace these sample dishes/prices with the restaurant's actual menu.
 export const categories = [
-  { id: 'breakfast', label: 'Breakfast', start: 5, end: 12, icon: '☀️' },
-  { id: 'lunch', label: 'Lunch', start: 12, end: 16, icon: '🍽️' },
-  { id: 'snacks', label: 'Small Plates', start: 16, end: 19, icon: '🥗' },
-  { id: 'dinner', label: 'Dinner', start: 19, end: 24, icon: '🌙' },
-  { id: 'bar', label: 'Bar & Drinks', start: 16, end: 24, icon: '🍸' },
+  { id: 'starters-veg', label: 'Veg Starters', icon: '🥗' },
+  { id: 'starters-nonveg', label: 'Non-Veg Starters', icon: '🍗' },
+  { id: 'mains-veg', label: 'Veg Main Course', icon: '🍛' },
+  { id: 'chicken', label: 'Chicken', icon: '🍗' },
+  { id: 'mutton', label: 'Mutton', icon: '🍖' },
+  { id: 'fish-prawns', label: 'Fish & Prawns', icon: '🐟' },
+  { id: 'eggs', label: 'Egg Dishes', icon: '🥚' },
+  { id: 'desserts', label: 'Desserts', icon: '🍮' },
+  { id: 'beverages', label: 'Beverages', icon: '🥤' },
+  { id: 'beer-breezers', label: 'Beer & Breezers', icon: '🍺' },
+  { id: 'wine', label: 'Wine', icon: '🍷' },
+  { id: 'spirits', label: 'Spirits', icon: '🥃' },
+  { id: 'liqueurs', label: 'Liqueurs', icon: '🍸' },
 ]
 
-export const menuItems = [
-  {
-    id: 1, category: 'breakfast', name: 'Farmhouse Breakfast', description: 'Farm eggs, toasted sourdough, greens and slow-roasted tomato.',
-    price: 289, tag: 'House favourite', veg: false, image: 'photo-1533089860892-a7c6f0a88666'
-  },
-  {
-    id: 2, category: 'breakfast', name: 'Berry French Toast', description: 'Brioche, seasonal berries, vanilla cream and maple drizzle.',
-    price: 249, tag: 'Sweet start', veg: true, image: 'photo-1484723091739-30a097e8f929'
-  },
-  {
-    id: 3, category: 'breakfast', name: 'Avocado Toast', description: 'Smashed avocado, chilli flakes, lemon and toasted artisan bread.',
-    price: 219, tag: 'Fresh pick', veg: true, image: 'photo-1525351484163-7529414344d8'
-  },
-  {
-    id: 4, category: 'lunch', name: 'Grilled Garden Bowl', description: 'Seasonal vegetables, grains, herbs and a bright citrus dressing.',
-    price: 329, tag: 'Light & fresh', veg: true, image: 'photo-1512621776951-a57141f2eefd'
-  },
-  {
-    id: 5, category: 'lunch', name: 'Smoky Grilled Chicken', description: 'Char-grilled chicken, roasted vegetables and house jus.',
-    price: 429, tag: 'Chef’s pick', veg: false, image: 'photo-1532550907401-a500c9a57435'
-  },
-  {
-    id: 6, category: 'lunch', name: 'Creamy Mushroom Pasta', description: 'Mushrooms, parmesan, herbs and silky cream sauce.',
-    price: 349, tag: 'Comfort food', veg: true, image: 'photo-1473093295043-cdd812d0e601'
-  },
-  {
-    id: 7, category: 'snacks', name: 'Crispy Lotus Stem', description: 'Crunchy lotus stem tossed in a sweet, spicy house glaze.',
-    price: 269, tag: 'Shareable', veg: true, image: 'photo-1547592180-85f173990554'
-  },
-  {
-    id: 8, category: 'snacks', name: 'Loaded Nachos', description: 'Corn chips, melted cheese, salsa, jalapeño and fresh herbs.',
-    price: 299, tag: 'Crowd favourite', veg: true, image: 'photo-1513456852971-30c0b8199d4d'
-  },
-  {
-    id: 9, category: 'dinner', name: 'Charcoal Paneer Tikka', description: 'Smoky paneer, peppers and a mint yoghurt dip.',
-    price: 339, tag: 'From the grill', veg: true, image: 'photo-1567188040759-fb8a883dc6d8'
-  },
-  {
-    id: 10, category: 'dinner', name: 'Signature Roast', description: 'Slow-roasted, deeply savoury and finished with seasonal sides.',
-    price: 549, tag: 'Signature plate', veg: false, image: 'photo-1544025162-d76694265947'
-  },
-  {
-    id: 11, category: 'bar', name: 'Citrus Garden', description: 'A bright citrus-forward house special with aromatic herbs.',
-    price: 349, tag: 'House special', veg: true, image: 'photo-1513558161293-cdaf765edfd7'
-  },
-  {
-    id: 12, category: 'bar', name: 'Smoked Old Fashioned', description: 'A spirit-forward classic with warm spice and a smoky finish.',
-    price: 499, tag: 'Classic', veg: true, image: 'photo-1470337458703-46ad1756a187'
-  },
+let nextId = 1
+
+function createItems(category, entries, options = {}) {
+  return entries.map((entry) => {
+    const [name, price, extra = {}] = entry
+
+    return {
+      id: nextId++,
+      category,
+      name,
+      price,
+      description: extra.description ?? '',
+      tag: extra.tag ?? '',
+      veg: options.veg,
+      image: extra.image ?? options.image ?? '',
+      ...(extra.price30 != null && { price30: extra.price30 }),
+      ...(extra.price60 != null && { price60: extra.price60 }),
+      ...(extra.priceBySize && { priceBySize: true }),
+      ...(extra.note && { note: extra.note }),
+    }
+  })
+}
+
+const items = [
+  ...createItems('starters-veg', [
+    ['French Fries', 290],
+    ['Cheesy Fries', 330],
+    ['Masala Fries', 330],
+    ['Chilli Cheese Toast', 330],
+    ['Mushroom Cheese Toast', 390],
+    ['Paneer Cheese Pattice', 330],
+    ['Cheese Stuffed Mushrooms', 390],
+    ['Chilli Mushroom', 390],
+    ['Butter Garlic Mushrooms', 390],
+    ['Chilli Paneer', 390],
+    ['Onion Rings', 290],
+    ['Golden Fried Veg', 290],
+    ['Hash Browns (3 pcs)', 390],
+    ['Garlic Bread', 290],
+    ['Papad', 100],
+    ['Masala Papad', 150],
+  ], { veg: true }),
+
+  ...createItems('starters-nonveg', [
+    ['Mutton Cutlets', 330],
+    ['Chicken Cheese Pattice', 330],
+    ['Chicken Tidbits', 390],
+    ['Chicken Wings BBQ', 390],
+    ['Chilli Chicken', 390],
+    ['Chicken Braveheart', 390],
+    ['Chicken Spicy Wrap (Pouch)', 390],
+    ['Chicken Cheese Toast', 390],
+    ['Fish Fingers', 490],
+    ['Chilli Garlic Prawns', 390],
+    ['Golden Fried Prawns', 390],
+    ['Butter Garlic Prawns', 390],
+    ['Rava Fried Prawns', 390],
+    ['Prawn Kababs', 420],
+    ['Butter Garlic Calamari', 490],
+    ['Crispy Calamari', 490],
+  ], { veg: false }),
+
+  ...createItems('mains-veg', [
+    ['Veg Dhansak', 390],
+    ['Paneer Bhurji', 390],
+    ['Jeera Aloo', 330],
+    ['Mutter Paneer', 390],
+    ['Mushroom Xacuti', 390],
+    ['Mix Veg', 390],
+    ['Paneer in Hot Garlic', 390],
+    ['Yellow Dal', 330],
+    ['Veg Fried Rice', 390],
+    ['Steam Rice', 220],
+    ['Jeera Rice', 240],
+    ['Buttered Rice', 240],
+    ['Veg Augratin', 450],
+    ['Stir Fry Veg', 450],
+    ['Paneer Mushroom Shaslik', 450],
+    ['Veg Spaghetti Verde', 450],
+    ['Veg Pasta Creamy Mushroom Sauce', 450],
+    ['Laccha Paratha (Plain)', 50],
+    ['Pav / Bread', 50],
+    ['Green Salad', 150],
+  ], { veg: true }),
+
+  ...createItems('chicken', [
+    ['Chicken Fried Rice', 450],
+    ['Chicken in Hot Garlic Sauce', 490],
+    ['Chicken Masala with Paratha', 590],
+    ['Chicken Farcha', 590],
+    ['Chicken Dhansak', 590],
+    ['Chicken Xacuti', 590],
+    ['Chicken Steak — Cafreal Sauce', 550],
+    ['Chicken Steak — BBQ Sauce', 550],
+    ['Chicken Steak — Creamy Mushroom Sauce', 550],
+    ['Chicken Steak — Teriyaki Sauce', 550],
+    ['Chicken Steak — Pepper Mushroom Sauce', 550],
+    ['Chicken Steak — Brown Mushroom Sauce', 550],
+    ['Chicken Steak — Pepper Sauce', 550],
+    ['Chicken Stroganoff with Fries or Rice', 550],
+    ['Chicken Pasta — Penne Mushroom Sauce', 550],
+    ['Chicken Cordon Bleu', 575],
+    ['Chicken Ala Kiev', 575],
+  ], { veg: false }),
+
+  ...createItems('mutton', [
+    ['Mutton Dhansak', 690],
+    ['Mutton Kheema with Laccha Paratha', 690],
+    ['Mutton Kheema Sali with Laccha Paratha', 720],
+    ['Mutton Sali Boti with Laccha Paratha', 690],
+  ], { veg: false }),
+
+  ...createItems('fish-prawns', [
+    ['Patrani Machi', null, { priceBySize: true, note: 'Available on order; price depends on size.' }],
+    ['Grilled Pomfret', null, { priceBySize: true, note: 'Available on order; price depends on size.' }],
+    ['Grilled Fish — Lemon Garlic', 690],
+    ['Grilled Fish — Mushroom Sauce', 690],
+    ['Fish Curry Rice', 690],
+    ['Fish Recheado', 690],
+    ['Dhan Dar with Prawn Patio', 790],
+    ['Prawns Curry Rice', 690],
+    ['Prawn Balchao', 690],
+    ['Grilled Tiger Prawns', null, { priceBySize: true, note: 'Available on order; price depends on size.' }],
+  ], { veg: false }),
+
+  ...createItems('eggs', [
+    ['Egg Roll (2 pcs)', 330],
+    ['Egg Fried Rice', 390],
+    ['Egg Curry Rice', 390],
+  ], { veg: false }),
+
+  ...createItems('desserts', [
+    ['Bebinca', 190],
+    ['Caramel Custard', 190],
+    ['Serra Durra', 190],
+    ['Chocolate Cups', 260],
+  ], { veg: true }),
+
+  ...createItems('beverages', [
+    ['Tea', 50],
+    ['Coffee', 70],
+    ['Espresso Coffee', 150],
+    ['Cappuccino', 150],
+    ['Latte', 150],
+    ['Cold Coffee', 150],
+    ['Hot Chocolate', 175],
+    ['Milk', 100],
+    ['Mineral Water', 30],
+    ['Soda', 40],
+    ['Fresh Lime Soda', 80],
+    ['Fresh Lime Water', 60],
+    ['Diet Coke', 80],
+    ['Thumbs Up', 50],
+    ['Sprite', 50],
+    ['Ginger Lemon Soda', 70],
+    ['Lemonade', 60],
+    ['Ice Cream Soda', 60],
+    ['Peach Soda', 60],
+    ['Raspberry Soda', 60],
+    ['Cranberry Soda', 60],
+    ['Green Apple Soda', 60],
+    ['Masala Soda', 70],
+    ['Orange Soda', 60],
+    ['Tango Soda', 60],
+    ['Ginger Ale', 100],
+    ['Tonic Water', 100],
+    ['Red Bull', 150],
+  ]),
+
+  ...createItems('beer-breezers', [
+    ['Kingfisher Premium (500 ml can)', 275],
+    ['Kingfisher Ultra (500 ml can)', 325],
+    ['Kingfisher Ultra Max (500 ml can)', 330],
+    ['Heineken Silver (500 ml can)', 330],
+    ['Budweiser Premium (500 ml can)', 325],
+    ['Hoegaarden (500 ml can)', 350],
+    ['Corona (500 ml can)', 360],
+    ["People's Classic (500 ml can)", 300],
+    ["People's Strong (500 ml can)", 340],
+    ['Breezer — Jamaican Passion', 275],
+    ['Breezer — Cranberry', 275],
+    ['Breezer — Blueberry', 275],
+  ]),
+
+  ...createItems('wine', [
+    ['Sula Chenin Blanc (375 ml)', 850],
+    ['Sula Sauvignon Blanc (375 ml)', 850],
+    ['Sula Shiraz Cabernet (375 ml)', 900],
+    ['Sula Satori (375 ml)', 850],
+    ['Sula Rosé (375 ml)', 850],
+  ]),
+
+  ...createItems('liqueurs', [
+    ['Baileys Original', 370, { price30: 370, price60: 630 }],
+    ['Baileys Salted Caramel', 420, { price30: 420, price60: 700 }],
+    ['Kahlúa', 300, { price30: 300, price60: 500 }],
+    ['Cointreau', 540, { price30: 540, price60: 900 }],
+  ]),
+
+  ...createItems('spirits', [
+    ['Old Monk Rum', 90, { price30: 90, price60: 180 }],
+    ['Bacardi Black Rum', 120, { price30: 120, price60: 220 }],
+    ['Bacardi White Rum', 185, { price30: 185, price60: 350 }],
+    ['Kohinoor Reserve Rum', 690, { price30: 690, price60: 1260 }],
+    ['Smirnoff Vodka', 170, { price30: 170, price60: 320 }],
+    ['Smirnoff Jambul Vodka', 185, { price30: 185, price60: 360 }],
+    ['Absolut Vodka', 250, { price30: 250, price60: 480 }],
+    ['Ketel One Vodka', 275, { price30: 275, price60: 530 }],
+    ['Grey Goose Vodka', 540, { price30: 540, price60: 1070 }],
+    ['Greater Than Gin', 185, { price30: 185, price60: 360 }],
+    ['Beefeater Gin', 250, { price30: 250, price60: 490 }],
+    ['Tanqueray Gin', 290, { price30: 290, price60: 570 }],
+    ['Jaisalmer Gin', 420, { price30: 420, price60: 760 }],
+    ["Blenders Pride Whisky", 160, { price30: 160, price60: 310 }],
+    ['Oaksmith Gold Whisky', 170, { price30: 170, price60: 330 }],
+    ['J&B Rare Whisky', 240, { price30: 240, price60: 470 }],
+    ['Johnnie Walker Red Label', 250, { price30: 250, price60: 490 }],
+    ["Teacher's Whisky", 280, { price30: 280, price60: 550 }],
+    ['VAT 69 Whisky', 280, { price30: 280, price60: 550 }],
+    ['Jameson Whisky', 290, { price30: 290, price60: 570 }],
+    ['Black & White Whisky', 300, { price30: 300, price60: 590 }],
+    ['Jim Beam Bourbon', 320, { price30: 320, price60: 630 }],
+    ["Jack Daniel's Whisky", 390, { price30: 390, price60: 770 }],
+    ['Johnnie Walker Black Label', 430, { price30: 430, price60: 850 }],
+    ['Virasat Whisky', 660, { price30: 660, price60: 1200 }],
+    ['Glenfiddich 12 Year', 680, { price30: 680, price60: 1380 }],
+  ]),
 ]
+
+export const menuItems = items
