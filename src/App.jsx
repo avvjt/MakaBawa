@@ -110,7 +110,7 @@ function ItemDetailsButton({ item }) {
   )
 }
 
-function MenuCard({ item, index }) {
+function MenuCard({ item, index, onAdd }) {
   const image = imageUrl(item.image, 850)
 
   return (
@@ -165,6 +165,15 @@ function MenuCard({ item, index }) {
         {item.description && <p>{item.description}</p>}
 
         {item.note && <p className="item-note">{item.note}</p>}
+
+        <button
+          type="button"
+          className="add-to-cart"
+          onClick={() => onAdd(item)}
+        >
+          <span>Add</span>
+          <span aria-hidden="true">+</span>
+        </button>
       </div>
     </motion.article>
   )
@@ -255,6 +264,29 @@ export default function App() {
   )
   const [search, setSearch] = useState('')
   const [selectedItem, setSelectedItem] = useState(null)
+  const [cart, setCart] = useState([])
+  const [cartOpen, setCartOpen] = useState(false)
+  const [orderSubmitted, setOrderSubmitted] = useState(false)
+
+  const addToCart = (item) => {
+    setCart((current) => {
+      const found = current.find((entry) => entry.item.id === item.id)
+      if (found) return current.map((entry) => entry.item.id === item.id ? { ...entry, quantity: entry.quantity + 1 } : entry)
+      return [...current, { item, quantity: 1 }]
+    })
+    setOrderSubmitted(false)
+    setCartOpen(true)
+  }
+
+  const changeQuantity = (itemId, amount) => {
+    setCart((current) => current.map((entry) => entry.item.id === itemId ? { ...entry, quantity: entry.quantity + amount } : entry).filter((entry) => entry.quantity > 0))
+    setOrderSubmitted(false)
+  }
+
+  const cartCount = cart.reduce((sum, entry) => sum + entry.quantity, 0)
+  const cartTotal = cart.reduce((sum, entry) => sum + (typeof entry.item.price === 'number' ? entry.item.price : 0) * entry.quantity, 0)
+  const hasVariablePrices = cart.some((entry) => typeof entry.item.price !== 'number')
+
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -346,64 +378,42 @@ export default function App() {
       </header>
 
       <main>
-        <section className="hero">
-          <img
-            className="hero-photo"
-            src={imageUrl('photo-1414235077428-338989a2e8c0', 1800)}
-            alt="Restaurant dining atmosphere"
-          />
-
-          <div className="hero-overlay" />
-
-          <div className="hero-content">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55 }}
-            >
-              <span className="eyebrow">
-                <span className="eyebrow-line" />
-                {greeting.icon} YOUR TABLE, YOUR MOMENT
-              </span>
-
-              <h1>
-                {greeting.title.split(' ').slice(0, -1).join(' ')}{' '}
-                <em>{greeting.title.split(' ').slice(-1).join(' ')}</em>
-              </h1>
-
-              <p>{greeting.sub}</p>
-
-              <button
-                type="button"
-                className="explore-button"
-                onClick={() =>
-                  document
-                    .getElementById('menu')
-                    ?.scrollIntoView({ behavior: 'smooth' })
-                }
-              >
-                Explore our menu
-                <ArrowDown size={16} />
-              </button>
-            </motion.div>
+        <section className="compact-welcome">
+          <span className="eyebrow">
+            <span className="eyebrow-line" />
+            {greeting.icon} MAKA BAWA · YOUR TABLE, YOUR MOMENT
+          </span>
+          <h1>{greeting.title}</h1>
+          <p>{greeting.sub}</p>
+          <span className="quick-picks-label">QUICK PICKS FOR THIS TIME</span>
+          <div className="quick-picks">
+            {(clock.hour >= 5 && clock.hour < 11
+              ? ["eggs", "starters-veg", "beverages"]
+              : clock.hour >= 11 && clock.hour < 16
+                ? ["mains-veg", "chicken", "fish-prawns"]
+                : clock.hour >= 16 && clock.hour < 19
+                  ? ["starters-veg", "starters-nonveg", "beverages"]
+                  : ["mains-veg", "chicken", "mutton"]
+            ).map((id) => {
+              const category = categories.find((entry) => entry.id === id)
+              if (!category) return null
+              return (
+                <button
+                  key={category.id}
+                  type="button"
+                  className="quick-pick"
+                  onClick={() => {
+                    selectCategory(category.id)
+                    document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" })
+                  }}
+                >
+                  <span>{category.icon}</span>
+                  {category.label}
+                  <ArrowUpRight size={14} />
+                </button>
+              )
+            })}
           </div>
-
-          <div className="hero-bottom">
-            <span>GOOD TASTE. BETTER MEMORIES.</span>
-            <span>01 — MENU</span>
-          </div>
-        </section>
-
-        <section className="welcome-strip">
-          <div>
-            <span className="small-label">WELCOME TO MAKA BAWA</span>
-            <h2>Whatever you're in the mood for.</h2>
-          </div>
-
-          <p>
-            From comforting favourites to evening drinks.{' '}
-            <strong>Find your next favourite.</strong>
-          </p>
         </section>
 
         <section id="menu" className="menu-section">
@@ -473,7 +483,7 @@ export default function App() {
           {visibleItems.length > 0 ? (
             <motion.div layout className="menu-grid">
               {visibleItems.map((item, index) => (
-                <MenuCard key={item.id} item={item} index={index} />
+                <MenuCard key={item.id} item={item} index={index} onAdd={addToCart} />
               ))}
             </motion.div>
           ) : (
@@ -522,6 +532,77 @@ export default function App() {
         </span>
         <span>GOOD MOMENTS, SERVED DAILY.</span>
       </footer>
+
+      {cartCount > 0 && (
+        <button
+          type="button"
+          className="cart-fab"
+          onClick={() => setCartOpen(!cartOpen)}
+        >
+          <span>View cart</span>
+          <span>{cartCount} item{cartCount === 1 ? "" : "s"}</span>
+          <strong>₹{cartTotal.toLocaleString("en-IN")}</strong>
+        </button>
+      )}
+
+      {cartOpen && (
+        <div className="cart-backdrop" role="presentation" onClick={() => setCartOpen(false)}>
+          <section
+            className="cart-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Your demo cart"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="cart-panel-heading">
+              <div>
+                <span className="small-label">MAKA BAWA</span>
+                <h2>Your cart</h2>
+              </div>
+              <button type="button" className="cart-close" onClick={() => setCartOpen(false)} aria-label="Close cart">×</button>
+            </div>
+
+            {orderSubmitted ? (
+              <div className="cart-confirmation">
+                <span className="cart-confirmation-icon">✓</span>
+                <h3>Demo order complete!</h3>
+                <p>This is only a front-end demonstration. No order was sent to the restaurant or kitchen, and no payment was taken.</p>
+                <button type="button" className="explore-button" onClick={() => { setCart([]); setOrderSubmitted(false); setCartOpen(false) }}>Back to menu</button>
+              </div>
+            ) : (
+              <>
+                <div className="cart-demo-notice">
+                  DEMO ONLY — checkout does not submit a real order.
+                </div>
+
+                <div className="cart-items">
+                  {cart.map(({ item, quantity }) => (
+                    <div className="cart-item" key={item.id}>
+                      <div className="cart-item-copy">
+                        <strong>{item.name}</strong>
+                        <span>{typeof item.price === "number" ? "₹" + item.price.toLocaleString("en-IN") : "Price to be confirmed"}</span>
+                      </div>
+                      <div className="quantity-control">
+                        <button type="button" onClick={() => changeQuantity(item.id, -1)} aria-label={"Remove one " + item.name}>−</button>
+                        <span>{quantity}</span>
+                        <button type="button" onClick={() => changeQuantity(item.id, 1)} aria-label={"Add one " + item.name}>+</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="cart-total-row">
+                  <span>Estimated subtotal</span>
+                  <strong>₹{cartTotal.toLocaleString("en-IN")}</strong>
+                </div>
+                {hasVariablePrices && <p className="cart-price-warning">Some items have prices by size or need confirmation, so they are not included in this subtotal.</p>}
+                <button type="button" className="cart-checkout" disabled={cart.length === 0} onClick={() => setOrderSubmitted(true)}>Try demo checkout</button>
+                <p className="cart-disclaimer">No payment is taken. Nothing is sent to the kitchen.</p>
+              </>
+            )}
+          </section>
+        </div>
+      )}
 
       <ItemModal
         item={selectedItem}
